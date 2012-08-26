@@ -1,28 +1,31 @@
 package org.chaotisch.hqapp;
 
 import java.io.BufferedReader;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
-import java.io.OutputStreamWriter;
 import java.io.PrintStream;
-import java.nio.CharBuffer;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Properties;
 
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.ContextMenu;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
-import android.view.View.OnClickListener;
+import android.view.ContextMenu.ContextMenuInfo;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.EditText;
-import android.widget.TextView;
+import android.widget.ListView;
 import android.widget.Toast;
 
 import com.jcraft.jsch.Channel;
@@ -30,51 +33,112 @@ import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.KeyPair;
 import com.jcraft.jsch.Session;
-import com.jcraft.jsch.jce.KeyPairGenRSA;
 
 public class MainActivity extends Activity {
 	/** Called when the activity is first created. */
 	Button button;
-	Button btnaltkey;
 	Session session;
-	ByteArrayOutputStream baos;
-	ByteArrayInputStream bais;
 	Channel channel;
+	private ListView mainListView;
+	private ArrayAdapter<String> listAdapter;
+	
 	final static String PRIVKEYFILE = "private.key";
 	final static String PUBKEYFILE = "public.key";
-	@Override
-	public void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
-		setContentView(R.layout.main);
-		bais = new ByteArrayInputStream(new byte[1000]);
-		button = (Button) findViewById(R.id.button1);
-		button.setOnClickListener(new OnClickListener() {
-			
-			public void onClick(View arg0) {
-				// TODO Auto-generated method stub
-				final Runnable r = new Runnable()
-				{
-				    public void run() 
-				    {
-				    	onSSH("31", "strom");
-				        Log.i(this.getClass().getName(),"fertig SSHed");
-				    }
-				};
-				r.run();
-				// onCommand(arg0);
-			}
-			
-		});
-		btnaltkey = (Button) findViewById(R.id.button2);
-		btnaltkey.setOnClickListener(new OnClickListener() {
 
-			public void onClick(View arg0) {
-				// TODO Auto-generated method stub
-				sharekey();
-			}
+		/** Called when the activity is first created. */
+		@Override
+		public void onCreate(Bundle savedInstanceState) {
+			super.onCreate(savedInstanceState);
+			setContentView(R.layout.main);
 
-		});
+			// Find the ListView resource.
+			mainListView = (ListView) findViewById(R.id.mainListView);
+
+			// Create and populate a List of planet names.
+			String[] planets = new String[] { "Summer", "Tür", "Alarm",
+					"Buntlicht", "Hell", "Planetenstrahler", "Beamer" };
+			ArrayList<String> planetList = new ArrayList<String>();
+			planetList.addAll(Arrays.asList(planets));
+
+			// Create ArrayAdapter using the planet list.
+			listAdapter = new ArrayAdapter<String>(this, R.layout.simplerow,
+					planetList);
+
+			// Add more planets. If you passed a String[] instead of a List<String>
+			// into the ArrayAdapter constructor, you must not add more items.
+			// Otherwise an exception will occur.
+			// listAdapter.add("Ceres");
+
+			// Set the ArrayAdapter as the ListView's adapter.
+			mainListView.setAdapter(listAdapter);
+
+			mainListView
+					.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+						public void onItemClick(AdapterView<?> parent, View view,
+								int position, long id) {
+							if (listAdapter.getItem(position)=="Alarm"){
+								final Runnable r = new Runnable()
+								{
+								    public void run() 
+								    {
+								    	onSSH("31", "strom");
+								        Log.i(this.getClass().getName(),"fertig SSHed");
+								    }
+								};
+								r.run();
+							}
+							Toast.makeText(getApplicationContext(),
+									"Click ListItem Number " + position,
+									Toast.LENGTH_LONG).show();
+
+							mainListView.getSelectedItemPosition();
+							Log.i(this.getClass().getName(), "Clicked");
+						}
+
+					});
+			registerForContextMenu(mainListView);
 		
+		checkkeyexists();
+	}
+	
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		MenuInflater inflater = getMenuInflater();
+		inflater.inflate(R.menu.mymenu, menu);
+		return true;
+	}
+
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		// Handle item selection
+		switch (item.getItemId()) {
+		case R.id.send_key:
+			sharekey();
+			return true;
+		case R.id.settings:
+			Toast.makeText(getApplicationContext(), "settings",
+					Toast.LENGTH_LONG).show();
+			return true;
+		case R.id.about:
+			Intent myIntent = new Intent(getApplicationContext(), About.class);
+			startActivityForResult(myIntent, 0);
+			return true;
+		default:
+			return super.onOptionsItemSelected(item);
+		}
+	}
+
+	@Override
+	public void onCreateContextMenu(ContextMenu menu, View v,
+			ContextMenuInfo menuInfo) {
+		AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo) menuInfo;
+		// menu.setHeaderTitle(String.valueOf(info.position));
+		menu.setHeaderTitle(listAdapter.getItem(info.position));
+		MenuInflater inflater = getMenuInflater();
+		inflater.inflate(R.menu.menu_onoff, menu);
+	}
+	
+	public void checkkeyexists(){
 		File file = getFileStreamPath(PRIVKEYFILE);
 		if(!file.exists()) {
 			final Runnable r = new Runnable()
@@ -87,9 +151,7 @@ public class MainActivity extends Activity {
 			};
 			r.run();
 		}
-
 	}
-
 	public void onSSH(String myaction, String username) {
 //		String username = "strom";
 //		String password = "testpassword";
