@@ -5,12 +5,12 @@
 
     <uses-sdk
         android:minSdkVersion="8"
-        android:targetSdkVersion="15" />
+        android:targetSdkVersion="10" />
 
     <uses-permission android:name="android.permission.INTERNET" />
 
     <application
-        android:icon="@drawable/ic_launcher"
+        android:icon="@drawable/icon"
         android:label="@string/app_name"
         android:theme="@style/AppTheme" >
         <activity
@@ -22,6 +22,15 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-         <activity android:name=".About"></activity>
+        <activity android:name=".About" >
+        </activity>
+        <activity
+            android:name=".Settings"
+            android:label="@string/title_activity_settings" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="org.chaotisch.hqapp.MainActivity" />
+        </activity>
     </application>
+
 </manifest>

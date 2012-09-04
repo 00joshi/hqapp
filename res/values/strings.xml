@@ -1,7 +1,11 @@
 <resources>
+
     <string name="app_name">Hack App</string>
     <string name="hello_world">Hello world!</string>
     <string name="menu_settings">Settings</string>
     <string name="title_activity_main">Hack App</string>
     <string name="authors">brought to you by joshi, balu, riots and bongo</string>
+    <string name="title_activity_settings">Settings</string>
+    <string name="field_nickname">Nickname</string>
+
 </resources>
