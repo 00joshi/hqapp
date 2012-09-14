@@ -13,7 +13,10 @@ import java.util.Arrays;
 import java.util.Properties;
 
 import android.app.Activity;
+import android.app.Dialog;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.ContextMenu;
@@ -22,10 +25,12 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ContextMenu.ContextMenuInfo;
+import android.view.View.OnClickListener;
 import android.widget.AdapterView;
 import android.widget.AdapterView.AdapterContextMenuInfo;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Toast;
 
@@ -37,12 +42,14 @@ import com.jcraft.jsch.Session;
 
 public class MainActivity extends Activity {
 	/** Called when the activity is first created. */
-	public int anaus;
-	Button button;
+	//public int anaus;
+//	public String varphrase;
+	//Button button;
 	Session session;
 	Channel channel;
 	private ListView mainListView;
 	private ArrayAdapter<String> listAdapter;
+	private JSch sshobj;
 
 	final static String PRIVKEYFILE = "private.key";
 	final static String PUBKEYFILE = "public.key";
@@ -52,7 +59,7 @@ public class MainActivity extends Activity {
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.main);
-
+		this.sshobj = new JSch();
 		// Find the ListView resource.
 		mainListView = (ListView) findViewById(R.id.mainListView);
 
@@ -87,15 +94,17 @@ public class MainActivity extends Activity {
 											"Rundumleuchte wurde ausgelöst");
 								}
 							};
-							r.run();
+							performOnBackgroundThread(r);
+
 						} else if (listAdapter.getItem(position) == "Summer") {
 							final Runnable r = new Runnable() {
-							public void run() {
-								onSSH("", "sumsum");
-								Log.i(this.getClass().getName(),"Summer wurde ausgelöst");
-							}
-						};
-						r.run();
+								public void run() {
+									onSSH("", "sumsum");
+									Log.i(this.getClass().getName(),
+											"Summer wurde ausgelöst");
+								}
+							};
+							performOnBackgroundThread(r);
 						} else {
 							onListItemClick(mainListView, view, position, id);
 						}
@@ -104,13 +113,43 @@ public class MainActivity extends Activity {
 						// "Click ListItem Number " + position,
 						// Toast.LENGTH_LONG).show();
 
-						mainListView.getSelectedItemPosition();
+						// mainListView.getSelectedItemPosition();
 						// Log.i(this.getClass().getName(), "Clicked");
 					}
 
 				});
 		registerForContextMenu(mainListView);
 		checkkeyexists();
+		askPassphrase();
+
+	}
+
+	public boolean askPassphrase() {
+		Button OkButton;
+		final Dialog dialogPass = new Dialog(this);
+		dialogPass.setContentView(R.layout.dialog);
+		dialogPass.setTitle("Enter Passphrase");
+		OkButton = (Button) dialogPass.findViewById(R.id.dialogButtonOK);
+		OkButton.setOnClickListener(new OnClickListener() {
+			public void onClick(View arg0) {
+				String StrPassphrase;
+				File file = getFileStreamPath(PRIVKEYFILE);
+				final EditText fldpassphrase = (EditText) dialogPass
+						.findViewById(R.id.editText1);
+				StrPassphrase = fldpassphrase.getText().toString();
+				try {
+					sshobj.addIdentity(file.getAbsolutePath(), StrPassphrase);
+				} catch (JSchException e) {
+					// TODO Auto-generated catch block
+					Log.i(this.getClass().getName(),
+							"Key konnte nicht geladen worde");
+				}
+				dialogPass.dismiss();
+			}
+		});
+
+		dialogPass.show();
+		return true;
 	}
 
 	@Override
@@ -132,7 +171,8 @@ public class MainActivity extends Activity {
 			startActivityForResult(myIntent0, 0);
 			return true;
 		case R.id.settings:
-			Intent myIntent1 = new Intent(getApplicationContext(), Settings.class);
+			Intent myIntent1 = new Intent(getApplicationContext(),
+					Settings.class);
 			startActivityForResult(myIntent1, 0);
 			return true;
 		default:
@@ -151,17 +191,18 @@ public class MainActivity extends Activity {
 		int intId = (int) deineId;
 		Log.i(this.getClass().getName(), String.valueOf(deineId));
 		listAdapter.getItem(intId);
-		
-		if (listAdapter.getItem(intId) == "Tür"){
+
+		if (listAdapter.getItem(intId) == "Tür") {
 			switch (item.getItemId()) {
-				case R.id.on:
+			case R.id.on:
 				final Runnable r = new Runnable() {
 					public void run() {
 						Log.i(this.getClass().getName(), "Tür geöffnet");
 						onSSH("", "open");
 					}
 				};
-				r.run();
+				performOnBackgroundThread(r);
+				// r.run();
 				return true;
 			case R.id.off:
 				final Runnable r1 = new Runnable() {
@@ -170,44 +211,45 @@ public class MainActivity extends Activity {
 						onSSH("", "close");
 					}
 				};
-				r1.run();
+				performOnBackgroundThread(r1);
 				return true;
 			}
 		} else {
-		
-		if (listAdapter.getItem(intId) == "buntes Licht") {
-			schalter = 10;
-		} else if (listAdapter.getItem(intId) == "Ufo Lichtstrahler") {
-			schalter = 20;
-		} else if (listAdapter.getItem(intId) == "Beamer") {
-			schalter = 40;
-		} else if (listAdapter.getItem(intId) == "Sound") {
-			schalter = 50;
-		} else if (listAdapter.getItem(intId) == "großes Licht") {
-			schalter = 60;
-		}
-		switch (item.getItemId()) {
-		case R.id.on:
-			schalter++;
-			break;
-		case R.id.off:
-			schalter = schalter + 2;
-			break;
-		}
-		
-		strschalter=String.valueOf(schalter);
-		if (listAdapter.getItem(intId)=="Beamer"){
-		strschalter=strschalter + "y";
-		}
-		
-		schaltcom = strschalter;
-		final Runnable r = new Runnable() {
-			public void run() {
-				Log.i(this.getClass().getName(), "fertig SSHed " + schaltcom);
-				onSSH(schaltcom, "strom");
+
+			if (listAdapter.getItem(intId) == "buntes Licht") {
+				schalter = 10;
+			} else if (listAdapter.getItem(intId) == "Ufo Lichtstrahler") {
+				schalter = 20;
+			} else if (listAdapter.getItem(intId) == "Beamer") {
+				schalter = 40;
+			} else if (listAdapter.getItem(intId) == "Sound") {
+				schalter = 50;
+			} else if (listAdapter.getItem(intId) == "großes Licht") {
+				schalter = 60;
 			}
-		};
-		r.run();
+			switch (item.getItemId()) {
+			case R.id.on:
+				schalter++;
+				break;
+			case R.id.off:
+				schalter = schalter + 2;
+				break;
+			}
+
+			strschalter = String.valueOf(schalter);
+			if (listAdapter.getItem(intId) == "Beamer") {
+				strschalter = strschalter + "y";
+			}
+
+			schaltcom = strschalter;
+			final Runnable r = new Runnable() {
+				public void run() {
+					Log.i(this.getClass().getName(), "fertig SSHed "
+							+ schaltcom);
+					onSSH(schaltcom, "strom");
+				}
+			};
+			performOnBackgroundThread(r);
 		}
 		return true;
 	}
@@ -219,10 +261,10 @@ public class MainActivity extends Activity {
 		// menu.setHeaderTitle(String.valueOf(info.position));
 		menu.setHeaderTitle(listAdapter.getItem(info.position));
 		MenuInflater inflater = getMenuInflater();
-		if(listAdapter.getItem(info.position)=="Tür"){
-		inflater.inflate(R.menu.menu_openclose, menu);	
-		}else{
-		inflater.inflate(R.menu.menu_onoff, menu);	
+		if (listAdapter.getItem(info.position) == "Tür") {
+			inflater.inflate(R.menu.menu_openclose, menu);
+		} else {
+			inflater.inflate(R.menu.menu_onoff, menu);
 		}
 	}
 
@@ -236,26 +278,20 @@ public class MainActivity extends Activity {
 	public void checkkeyexists() {
 		File file = getFileStreamPath(PRIVKEYFILE);
 		if (!file.exists()) {
-			final Runnable r = new Runnable() {
-				public void run() {
-					makeakey();
-					Log.i(this.getClass().getName(), "Key created!");
-				}
-			};
-			r.run();
+			Log.i(this.getClass().getName(), "No keyfile found");
+			Intent myIntent0 = new Intent(getApplicationContext(),
+					Settings.class);
+			startActivityForResult(myIntent0, 0);
 		}
 	}
 
 	public void onSSH(String myaction, String username) {
 		// String username = "strom";
 		// String password = "testpassword";
-		String host = "192.168.2.10"; // sample ip address
-		JSch jsch = new JSch();
+		String host = "192.168.2.10"; // sample ip address 192.168.2.10
 		try {
 
-			File file = getFileStreamPath(PRIVKEYFILE);
-			jsch.addIdentity(file.getAbsolutePath(), "solong");
-			session = jsch.getSession(username, host, 22);
+			session = this.sshobj.getSession(username, host, 22);
 			// session.setPassword(password);
 			Properties properties = new Properties();
 			properties.put("StrictHostKeyChecking", "no");
@@ -277,8 +313,14 @@ public class MainActivity extends Activity {
 			channel.disconnect();
 			session.disconnect();
 		} catch (JSchException e) {
+			final String mye = e.getMessage();
 			// TODO Auto-generated catch block
-			Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show();
+			runOnUiThread(new Runnable() {
+				public void run() {
+					Toast.makeText(getApplicationContext(), mye,
+							Toast.LENGTH_LONG).show();
+				}
+			});
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -310,46 +352,14 @@ public class MainActivity extends Activity {
 		}
 	}
 
-	public void makeakey() {
-		JSch jsch = new JSch();
-		int type = KeyPair.RSA;
-		try {
-			KeyPair kpair = KeyPair.genKeyPair(jsch, type);
-			kpair.setPassphrase("solong");
-
-			Log.i(this.getClass().getName(),
-					"Finger print: " + kpair.getFingerPrint());
-			OutputStream out = new OutputStream() {
-				private StringBuilder string = new StringBuilder();
-
-				@Override
-				public void write(int b) throws IOException {
-					this.string.append((char) b);
-
-				}
-
-				public String toString() {
-					return this.string.toString();
-				}
-			};
-
-			kpair.writePublicKey(out, "Hq app key");
-
-			FileOutputStream fOut = openFileOutput(PRIVKEYFILE, MODE_PRIVATE);
-			kpair.writePrivateKey(fOut);
-
-			fOut.close();
-
-			FileOutputStream fOut2 = openFileOutput(PUBKEYFILE, MODE_PRIVATE);
-			kpair.writePublicKey(fOut2, "Hq app key");
-
-			fOut2.close();
-
-			kpair.dispose();
-
-		} catch (Exception e) {
-			System.out.println(e);
-		}
+	public static Thread performOnBackgroundThread(final Runnable runnable) {
+		final Thread t = new Thread() {
+			public void run() {
+				runnable.run();
+			}
+		};
+		t.start();
+		return t;
 
 	}
 }

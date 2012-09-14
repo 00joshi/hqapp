@@ -1,29 +1,15 @@
-<?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="horizontal">
-    
-    <EditText android:id="@+id/field_nickname"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:hint="@string/field_nickname"
-        android:layout_weight="1" />
-    <EditText android:id="@+id/field_password"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:hint="Password"
-        android:layout_weight="1" />
+<?xml version="1.0" encoding="utf-8"?> 
+    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:layout_width="fill_parent"
+              android:layout_height="fill_parent"
+              android:orientation="vertical">
+   
+        <ListView android:layout_width="fill_parent"   
+          android:layout_height="wrap_content"
+          android:height="0dp"
+          android:layout_weight="1"
+          android:background="#000000"
+          android:id="@+id/SettingsListView">  
+        </ListView>
 
-    <EditText android:id="@+id/field_keylength"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:hint="1024"
-        android:layout_weight="1" />
-	<Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Bestätigen" />
- 
-</LinearLayout>
+    </LinearLayout>

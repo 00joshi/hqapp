@@ -31,6 +31,27 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="org.chaotisch.hqapp.MainActivity" />
         </activity>
+        <activity
+            android:name=".ImportKey"
+            android:label="@string/title_activity_import_key" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="org.chaotisch.hqapp.Settings" />
+        </activity>
+        <activity
+            android:name=".CreateKey"
+            android:label="@string/title_activity_create_key" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="org.chaotisch.hqapp.Settings" />
+        </activity>
+        <activity
+            android:name=".SetPassphrase"
+            android:label="@string/title_activity_set_passphrase" >
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="org.chaotisch.hqapp.Settings" />
+        </activity>
     </application>
 
 </manifest>
