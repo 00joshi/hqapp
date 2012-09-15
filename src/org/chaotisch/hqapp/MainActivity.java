@@ -11,6 +11,7 @@ import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Properties;
+import java.util.Vector;
 
 import android.app.Activity;
 import android.app.Dialog;
@@ -120,8 +121,45 @@ public class MainActivity extends Activity {
 				});
 		registerForContextMenu(mainListView);
 		checkkeyexists();
-		askPassphrase();
+		
+		
+		
+		//try to read file without passphrase
+				File file = getFileStreamPath(PRIVKEYFILE);
 
+				KeyPair kpair;
+				
+				try {
+					kpair = KeyPair.load(sshobj, file.getAbsolutePath());
+				
+
+					Log.i(this.getClass().getName(),"key has "+(kpair.isEncrypted()?"been ":"not been ")+"encrypted");
+					if(!kpair.isEncrypted())
+					{
+						sshobj.addIdentity(file.getAbsolutePath(), "");
+					}
+					else
+					{
+						askPassphrase();
+					}
+					
+			      /*String passphrase="";
+			      while(kpair.isEncrypted()){
+			    	  
+			    	  askPassphrase();
+			    	  //PASSPHRASE =
+			    		if(!kpair.decrypt(passphrase)){
+			    			Log.i(this.getClass().getName(),"failed to decrypt key");
+			    		}
+			    		else{
+			    			Log.i(this.getClass().getName(),"key is decrypted.");
+			    		} 
+			    		return;
+			      }*/
+				} catch (JSchException e2) {
+					// TODO Auto-generated catch block
+					e2.printStackTrace();
+				}
 	}
 
 	public boolean askPassphrase() {
@@ -147,7 +185,6 @@ public class MainActivity extends Activity {
 				dialogPass.dismiss();
 			}
 		});
-
 		dialogPass.show();
 		return true;
 	}
