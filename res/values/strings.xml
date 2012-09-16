@@ -10,5 +10,5 @@
     <string name="title_activity_import_key">ImportKey</string>
     <string name="title_activity_create_key">CreateKey</string>
     <string name="title_activity_set_passphrase">SetPassphrase</string>
-
+	<string name="version">Version xx</string>
 </resources>
