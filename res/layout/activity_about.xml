@@ -8,13 +8,13 @@
         android:id="@+id/TextView1"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="This App is brought to you by joshi, balu, bongo, riotz"
+        android:text="@+string/authors"
         android:ems="10">
     </TextView>
     
     <TextView
         android:id="@+id/Version"
-        android:text="Version beta 1"
+        android:text="@+string/version"
         android:layout_width="match_parent"
   		android:layout_height="wrap_content"
         >
