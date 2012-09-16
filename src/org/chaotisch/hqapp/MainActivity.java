@@ -11,8 +11,10 @@ import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Properties;
+import java.util.Vector;
 
 import android.app.Activity;
+import android.app.Application;
 import android.app.Dialog;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -40,26 +42,27 @@ import com.jcraft.jsch.JSchException;
 import com.jcraft.jsch.KeyPair;
 import com.jcraft.jsch.Session;
 
+
 public class MainActivity extends Activity {
 	/** Called when the activity is first created. */
-	//public int anaus;
-//	public String varphrase;
-	//Button button;
+	private boolean identityLoaded = false;
 	Session session;
 	Channel channel;
 	private ListView mainListView;
 	private ArrayAdapter<String> listAdapter;
-	private JSch sshobj;
+	//private JSch sshobj;
 
 	final static String PRIVKEYFILE = "private.key";
 	final static String PUBKEYFILE = "public.key";
+	final static int GENERATE_KEY_REQUEST = 1;
 
 	/** Called when the activity is first created. */
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.main);
-		this.sshobj = new JSch();
+		//this.sshobj = new JSch();
+		
 		// Find the ListView resource.
 		mainListView = (ListView) findViewById(R.id.mainListView);
 
@@ -120,11 +123,71 @@ public class MainActivity extends Activity {
 				});
 		registerForContextMenu(mainListView);
 		checkkeyexists();
-		askPassphrase();
-
+		Log.i(this.getClass().getName(),"Load identity ? ");
+		if(!hqapp.getHqapp().isIdentityLoaded())
+			hqapp.getHqapp().setIdentityLoaded( this.loadSshIdentity() );
+		
+		
+	}
+	
+	
+	public boolean loadSshIdentity()
+	{
+		return loadSshIdentity("");
 	}
 
+	/**
+	 * Load /Reload SSH identity form file to sshobj
+	 * if locked with passphrase it calls askPassphrase
+	 * @return boolean weather it was successfull
+	 */
+	public boolean loadSshIdentity(String passphrase)
+	{
+		//try to read file without passphrase
+		File file = getFileStreamPath(PRIVKEYFILE);
+		if (!file.exists()) {
+			Log.i(this.getClass().getName(),"Key file does not exsit");
+			return false;
+		}
+		KeyPair kpair;
+		
+		try {
+			kpair = KeyPair.load(hqapp.getHqapp().getSshobj(), file.getAbsolutePath());
+		
+
+			Log.i(this.getClass().getName(),"key has "+(kpair.isEncrypted()?"been ":"not been ")+"encrypted");
+			if(!kpair.isEncrypted() || (!passphrase.equalsIgnoreCase("") && kpair.decrypt(passphrase)))
+			{
+				//wenn nicht encrypteter key oder passphrase übergeben die unlocked dann unlock
+				hqapp.getHqapp().getSshobj().addIdentity(file.getAbsolutePath(), passphrase);
+			}
+			else if( passphrase.equalsIgnoreCase("") )
+			{
+				//wenn keine passphrase dann fragen
+				askPassphrase();
+			}
+			else
+			{
+				return false;
+			}
+			
+		} catch (JSchException e2) {
+			// TODO Auto-generated catch block
+			e2.printStackTrace();
+			//ohne key nix los
+			//nötig damit keine endlosschleife
+			System.exit(-1);
+			//return false;
+		}
+		return true;
+	}
+
+	/**
+	 * Asks for passphrase and then loads identity
+	 * @return true
+	 */
 	public boolean askPassphrase() {
+		final String return_param;
 		Button OkButton;
 		final Dialog dialogPass = new Dialog(this);
 		dialogPass.setContentView(R.layout.dialog);
@@ -132,26 +195,26 @@ public class MainActivity extends Activity {
 		OkButton = (Button) dialogPass.findViewById(R.id.dialogButtonOK);
 		OkButton.setOnClickListener(new OnClickListener() {
 			public void onClick(View arg0) {
-				String StrPassphrase;
-				File file = getFileStreamPath(PRIVKEYFILE);
 				final EditText fldpassphrase = (EditText) dialogPass
 						.findViewById(R.id.editText1);
-				StrPassphrase = fldpassphrase.getText().toString();
-				try {
-					sshobj.addIdentity(file.getAbsolutePath(), StrPassphrase);
-				} catch (JSchException e) {
-					// TODO Auto-generated catch block
-					Log.i(this.getClass().getName(),
-							"Key konnte nicht geladen worde");
+				
+				if(loadSshIdentity(fldpassphrase.getText().toString()))
+				{
+					dialogPass.dismiss();
 				}
-				dialogPass.dismiss();
+				else
+				{
+					Toast.makeText(getApplicationContext(), "wrong passphrase",
+							Toast.LENGTH_LONG).show();
+					fldpassphrase.setText("");
+				}
 			}
 		});
-
 		dialogPass.show();
 		return true;
 	}
-
+	
+	
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		MenuInflater inflater = getMenuInflater();
@@ -173,7 +236,7 @@ public class MainActivity extends Activity {
 		case R.id.settings:
 			Intent myIntent1 = new Intent(getApplicationContext(),
 					Settings.class);
-			startActivityForResult(myIntent1, 0);
+			startActivityForResult(myIntent1, GENERATE_KEY_REQUEST);
 			return true;
 		default:
 			return super.onOptionsItemSelected(item);
@@ -281,9 +344,10 @@ public class MainActivity extends Activity {
 			Log.i(this.getClass().getName(), "No keyfile found");
 			Intent myIntent0 = new Intent(getApplicationContext(),
 					Settings.class);
-			startActivityForResult(myIntent0, 0);
+			startActivityForResult(myIntent0, GENERATE_KEY_REQUEST);
 		}
 	}
+
 
 	public void onSSH(String myaction, String username) {
 		// String username = "strom";
@@ -291,7 +355,7 @@ public class MainActivity extends Activity {
 		String host = "192.168.2.10"; // sample ip address 192.168.2.10
 		try {
 
-			session = this.sshobj.getSession(username, host, 22);
+			session = hqapp.getHqapp().getSshobj().getSession(username, host, 22);
 			// session.setPassword(password);
 			Properties properties = new Properties();
 			properties.put("StrictHostKeyChecking", "no");
@@ -361,5 +425,22 @@ public class MainActivity extends Activity {
 		t.start();
 		return t;
 
+	}
+	
+	@Override
+	protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+	    //not nice but hey...
+		//letz just do this
+		Log.i(this.getClass().getName(),"onARes ("+requestCode+","+resultCode+",...");
+		if(requestCode == GENERATE_KEY_REQUEST) 
+		{
+		try {
+			hqapp.getHqapp().getSshobj().removeAllIdentity();
+		} catch (JSchException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		loadSshIdentity();
+		}
 	}
 }

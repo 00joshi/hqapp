@@ -75,6 +75,7 @@ public final class R {
         public static final int title_activity_main=0x7f040003;
         public static final int title_activity_set_passphrase=0x7f040009;
         public static final int title_activity_settings=0x7f040005;
+        public static final int version=0x7f04000a;
     }
     public static final class style {
         public static final int AppTheme=0x7f050000;
