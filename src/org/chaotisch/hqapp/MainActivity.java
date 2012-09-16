@@ -50,7 +50,7 @@ public class MainActivity extends Activity {
 	Channel channel;
 	private ListView mainListView;
 	private ArrayAdapter<String> listAdapter;
-	private JSch sshobj;
+	//private JSch sshobj;
 
 	final static String PRIVKEYFILE = "private.key";
 	final static String PUBKEYFILE = "public.key";
@@ -435,7 +435,7 @@ public class MainActivity extends Activity {
 		if(requestCode == GENERATE_KEY_REQUEST) 
 		{
 		try {
-			sshobj.removeAllIdentity();
+			hqapp.getHqapp().getSshobj().removeAllIdentity();
 		} catch (JSchException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
