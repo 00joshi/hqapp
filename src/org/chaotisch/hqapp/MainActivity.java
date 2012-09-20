@@ -3,22 +3,15 @@ package org.chaotisch.hqapp;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Properties;
-import java.util.Vector;
-
 import android.app.Activity;
-import android.app.Application;
 import android.app.Dialog;
 import android.content.Intent;
-import android.content.SharedPreferences;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.ContextMenu;
@@ -45,7 +38,6 @@ import com.jcraft.jsch.Session;
 
 public class MainActivity extends Activity {
 	/** Called when the activity is first created. */
-	private boolean identityLoaded = false;
 	Session session;
 	Channel channel;
 	private ListView mainListView;
@@ -187,7 +179,6 @@ public class MainActivity extends Activity {
 	 * @return true
 	 */
 	public boolean askPassphrase() {
-		final String return_param;
 		Button OkButton;
 		final Dialog dialogPass = new Dialog(this);
 		dialogPass.setContentView(R.layout.dialog);
@@ -350,8 +341,6 @@ public class MainActivity extends Activity {
 
 
 	public void onSSH(String myaction, String username) {
-		// String username = "strom";
-		// String password = "testpassword";
 		String host = "192.168.2.10"; // sample ip address 192.168.2.10
 		try {
 

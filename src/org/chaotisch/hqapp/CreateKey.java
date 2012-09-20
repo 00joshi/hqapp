@@ -1,6 +1,7 @@
 package org.chaotisch.hqapp;
 
 import java.io.FileOutputStream;
+import java.util.concurrent.CountDownLatch;
 
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.KeyPair;
@@ -81,8 +82,19 @@ public class CreateKey extends Activity {
 
 			}
 		};
-		r.run();
+		performOnBackgroundThread(r);
 		return true;
 	}
 
+	public static Thread performOnBackgroundThread(final Runnable runnable) {
+		final Thread t = new Thread() {
+			public void run() {
+				runnable.run();
+			}
+		};
+		t.start();
+		return t;
+
+	}
+	
 }
