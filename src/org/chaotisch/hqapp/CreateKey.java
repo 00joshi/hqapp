@@ -2,6 +2,7 @@ package org.chaotisch.hqapp;
 
 import java.io.FileOutputStream;
 import java.util.concurrent.CountDownLatch;
+import java.lang.Math;
 
 import com.jcraft.jsch.JSch;
 import com.jcraft.jsch.KeyPair;
@@ -13,12 +14,15 @@ import android.widget.SeekBar;
 import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.TextView;
 import android.app.Activity;
+import android.app.Dialog;
 import android.content.Intent;
 
 public class CreateKey extends Activity {
 	final static String PRIVKEYFILE = "private.key";
 	final static String PUBKEYFILE = "public.key";
 	int genkeylength = 1024;
+	Dialog wartdialog;
+	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -31,8 +35,10 @@ public class CreateKey extends Activity {
 	private class yourListener implements SeekBar.OnSeekBarChangeListener {
 		TextView Keylength = (TextView) findViewById(R.id.seekBarValue);
 
-        public void onProgressChanged(SeekBar seekBar, int progress,
+        public void onProgressChanged(SeekBar seekBar, int nprogress,
                 boolean fromUser) {
+        	int progress;
+        	progress = (int) Math.round(Math.pow(2,nprogress+10));
                             // Log the progress
             Log.d("DEBUG", "Schlüssellänge: "+progress);
                             //set textView's text
@@ -71,10 +77,16 @@ public class CreateKey extends Activity {
 				fOut2.close();
 				kpair.dispose();
 				
+				runOnUiThread(new Runnable() { 
+		            public void run() { 
+		             wartdialog.dismiss();
+		            } 
+		        });
+
+				
 		        Intent a = new Intent(CreateKey.this,MainActivity.class);
 		        a.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
 		        startActivity(a);
-
 				
 				} catch (Exception e) {
 						System.out.println(e);
@@ -83,6 +95,10 @@ public class CreateKey extends Activity {
 			}
 		};
 		performOnBackgroundThread(r);
+		wartdialog = new Dialog(this);
+		wartdialog.setContentView(R.layout.waitdialog);
+		wartdialog.setTitle("Keys are being generated");
+		wartdialog.show();
 		return true;
 	}
 

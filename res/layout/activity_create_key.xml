@@ -62,8 +62,8 @@
         android:layout_marginRight="15dp"
         android:layout_below="@+id/textView1"
         android:layout_marginTop="10dp"
-        android:max="8192"
-        android:progress="1024" />
+        android:max="5"
+        android:progress="0" />
 
     <TextView
         android:id="@+id/seekBarValue"
